@@ -1,109 +1,492 @@
-<script>
-/**
- * @component RegisterContainer
- * @description User registration container component
- * @version 2.0.0
- */
-import { ref, computed, reactive } from "vue";
-import { useForm, useField } from 'vee-validate';
-import * as yup from "yup";
+<script setup lang="ts">
+import { ref, onMounted, nextTick } from "vue";
+import { useRegister } from "./composables/useRegister";
 
-const handleRegister = () => {
-  // Registration logic goes here
-};
+const {
+  phoneNumber,
+  fullName,
+  errorMessage,
+  isLoading,
+  phoneInvalid,
+  isPhoneValid,
+  isFullNameValid,
+  canSubmit,
+  handleSubmit,
+  goToLogin,
+  handlePhoneInput,
+} = useRegister();
 
-const state = reactive({
-  isLoading: false,
-  phoneNumber: "",
-  verificationCode: "",
-});
+const phoneNumberInput = ref<any | null>(null);
+const fullNameInput = ref<any | null>(null);
 
-// Form validation schema
-const schema = yup.object({
-  phoneNumber: yup.string().required('شماره همراه الزامی است').matches(/^09\d{9}$/, 'شماره همراه باید با 09 شروع شود'),
-  verificationCode: yup.string().required('کد تایید الزامی است').min(5, 'کد تایید باید ۵ رقم باشد'),
-});
-
-// Form setup
-const { handleSubmit, errors } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    phoneNumber: "",
-    verificationCode: "",
-  },
-});
-
-// Fields
-const { value: phoneNumber } = useField('phoneNumber');
-const { value: verificationCode } = useField('verificationCode');
-
-// Computed
-const isLoading = computed(() => state.isLoading);
-const canSubmit = computed(() => !isLoading.value && phoneNumber.value && verificationCode.value);
-
-// Submit handler
-const submit = handleSubmit(async (values) => {
-  state.isLoading = true;
-  try {
-    await handleRegister();
-  } finally {
-    state.isLoading = false;
-  }
+onMounted(() => {
+  nextTick(() => {
+    fullNameInput.value?.focus();
+  });
 });
 </script>
+
 <template>
-  <div
-    dir="rtl"
-    class="register-container bg-gray-100 pa-6 rounded-lg w-96 mx-auto mt-12"
-  >
-    <v-tabs color="primary" align-tabs="center">
-      <v-tab value="one">شماره همراه</v-tab>
-      <v-tab value="two">نام کاربری</v-tab>
-    </v-tabs>
-    <Transition name="fade">
-      <div v-if="true" class="mt-6">
-        <form @submit.prevent="submit">
-          <v-text-field
-            v-model="phoneNumber"
-            label="شماره همراه"
-            :disabled="isLoading"
-            :error-messages="errors.phoneNumber"
-            autocomplete="tel"
-            dir="ltr"
-          >
-            <template #prepend-inner>
-              <v-icon color="primary" size="20">mdi-cellphone</v-icon>
-            </template>
-          </v-text-field>
+  <div class="register-page">
+    <!-- Decorative background elements -->
+    <div class="bg-decoration">
+      <div class="circle circle-1"></div>
+      <div class="circle circle-2"></div>
+      <div class="circle circle-3"></div>
+    </div>
 
-          <v-text-field
-            v-model="verificationCode"
-            label="کد تایید"
-            :disabled="isLoading"
-            :error-messages="errors.verificationCode"
-            autocomplete="one-time-code"
-            dir="ltr"
-          >
-            <template #prepend-inner>
-              <v-icon color="primary" size="20">mdi-shield-key</v-icon>
-            </template>
-          </v-text-field>
-
-          <v-btn
-            color="primary"
-            size="large"
-            :loading="isLoading"
-            :disabled="!canSubmit"
-            type="submit"
-            block
-            class="mt-4"
-          >
-            <v-icon start>mdi-account-plus</v-icon>
-            ثبت نام
-          </v-btn>
-        </form>
+    <div class="register-container">
+      <!-- Header Section -->
+      <div class="header-section">
+        <div class="icon-wrapper">
+          <v-icon size="48" color="#4caf50">mdi-account-plus</v-icon>
+        </div>
+        <h1 class="title">ایجاد حساب کاربری</h1>
+        <p class="subtitle">
+          لطفاً نام و شماره موبایل خود را وارد کنید
+        </p>
       </div>
-    </Transition>
+
+      <!-- Form Section -->
+      <div class="form-section">
+        <!-- Full Name Input -->
+        <div class="input-group">
+          <label class="input-label">
+            <v-icon size="18" class="me-1">mdi-account-outline</v-icon>
+            نام و نام خانوادگی
+          </label>
+          <v-text-field
+            ref="fullNameInput"
+            dir="rtl"
+            v-model="fullName"
+            variant="outlined"
+            :color="'#4caf50'"
+            placeholder="مثال: علی احمدی"
+            class="premium-input"
+            hide-details
+            density="comfortable"
+            @keyup.enter.prevent="
+              isPhoneValid ? handleSubmit() : phoneNumberInput?.focus()
+            "
+          >
+            <template #prepend-inner>
+              <v-icon
+                v-if="isFullNameValid"
+                color="#4caf50"
+                size="20"
+                class="check-icon"
+              >
+                mdi-check-circle
+              </v-icon>
+            </template>
+          </v-text-field>
+        </div>
+
+        <!-- Phone Number Input -->
+        <div class="input-group">
+          <label class="input-label">
+            <v-icon size="18" class="me-1">mdi-phone-outline</v-icon>
+            شماره موبایل
+          </label>
+          <v-text-field
+            ref="phoneNumberInput"
+            dir="rtl"
+            variant="outlined"
+            v-model="phoneNumber"
+            type="tel"
+            :color="'#4caf50'"
+            placeholder="09123456789"
+            class="premium-input"
+            :class="{ 'has-error': phoneInvalid }"
+            maxlength="11"
+            @input="handlePhoneInput(phoneNumber)"
+            hide-details
+            density="comfortable"
+            :error="phoneInvalid"
+            @keyup.enter.prevent="canSubmit ? handleSubmit() : null"
+          >
+            <template #prepend-inner>
+              <v-icon
+                v-if="phoneNumber && !phoneInvalid"
+                @click="
+                  phoneNumber = '';
+                  errorMessage = '';
+                "
+                size="20"
+                class="clear-icon"
+              >
+                mdi-close-circle
+              </v-icon>
+              <v-icon
+                v-if="isPhoneValid"
+                color="#4caf50"
+                size="20"
+                class="check-icon ms-1"
+              >
+                mdi-check-circle
+              </v-icon>
+            </template>
+            <template #append-inner>
+              <v-icon size="20" :color="phoneInvalid ? '#ef5350' : '#9e9e9e'">
+                mdi-phone
+              </v-icon>
+            </template>
+          </v-text-field>
+
+          <!-- Error/Helper text -->
+          <div class="helper-row">
+            <p
+              class="helper-text"
+              :class="{ error: phoneInvalid }"
+            >
+              <v-icon size="14" class="me-1">
+                {{ phoneInvalid ? 'mdi-alert-circle' : 'mdi-information-outline' }}
+              </v-icon>
+              شماره موبایل باید با 09 شروع شود
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <v-btn
+        class="submit-btn"
+        :disabled="!canSubmit"
+        :loading="isLoading"
+        size="x-large"
+        block
+        @click="handleSubmit"
+      >
+        <v-icon class="me-2">mdi-arrow-left</v-icon>
+        ثبت‌نام و دریافت کد تایید
+      </v-btn>
+
+      <!-- Login Link -->
+      <div class="login-link-section">
+        <span class="login-text">قبلاً ثبت‌نام کرده‌اید؟</span>
+        <button class="login-btn" @click="goToLogin">
+          <span>ورود به حساب</span>
+          <v-icon size="18">mdi-login</v-icon>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
-<style scoped></style>
+
+<style scoped>
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8faf8 0%, #e8f5e9 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative background */
+.bg-decoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+}
+
+.circle-1 {
+  width: 400px;
+  height: 400px;
+  background: #4caf50;
+  top: -100px;
+  right: -100px;
+}
+
+.circle-2 {
+  width: 300px;
+  height: 300px;
+  background: #81c784;
+  bottom: -50px;
+  left: -50px;
+}
+
+.circle-3 {
+  width: 200px;
+  height: 200px;
+  background: #a5d6a7;
+  top: 50%;
+  left: 10%;
+}
+
+.register-container {
+  width: 100%;
+  max-width: 440px;
+  background: white;
+  border-radius: 24px;
+  padding: 40px 32px;
+  box-shadow: 0 20px 60px rgba(76, 175, 80, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  position: relative;
+  direction: rtl;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header Section */
+.header-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.icon-wrapper {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.2);
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Form Section */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.premium-input {
+  --v-field-border-opacity: 0.2;
+}
+
+.premium-input :deep(.v-field) {
+  border-radius: 14px;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.premium-input :deep(.v-field--focused) {
+  background: white;
+  box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
+}
+
+.premium-input :deep(.v-field__input) {
+  padding: 12px 16px;
+  font-size: 1rem;
+}
+
+.premium-input :deep(input) {
+  text-align: right;
+}
+
+.premium-input :deep(input::placeholder) {
+  color: #bbb;
+  text-align: right;
+}
+
+.premium-input.has-error :deep(.v-field) {
+  background: #fff5f5;
+}
+
+.check-icon {
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.clear-icon {
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.clear-icon:hover {
+  color: #666;
+}
+
+.helper-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.helper-text {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #888;
+  transition: color 0.2s ease;
+}
+
+.helper-text.error {
+  color: #ef5350;
+}
+
+/* Submit Button */
+.submit-btn {
+  height: 56px !important;
+  border-radius: 14px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  background: linear-gradient(135deg, #4caf50, #43a047) !important;
+  color: white !important;
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.35) !important;
+  transition: all 0.3s ease !important;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(76, 175, 80, 0.45) !important;
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  background: linear-gradient(135deg, #bdbdbd, #9e9e9e) !important;
+  box-shadow: none !important;
+}
+
+/* Login Link Section */
+.login-link-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.login-text {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #4caf50;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.login-btn:hover {
+  background: #e8f5e9;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .register-page {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+
+  .register-container {
+    padding: 32px 20px;
+    border-radius: 20px;
+  }
+
+  .icon-wrapper {
+    width: 72px;
+    height: 72px;
+  }
+
+  .icon-wrapper .v-icon {
+    font-size: 36px !important;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .submit-btn {
+    height: 52px !important;
+  }
+
+  .circle-1 {
+    width: 250px;
+    height: 250px;
+    top: -80px;
+    right: -80px;
+  }
+
+  .circle-2 {
+    width: 180px;
+    height: 180px;
+  }
+
+  .circle-3 {
+    display: none;
+  }
+}
+</style>
