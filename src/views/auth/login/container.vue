@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const phoneNumber = ref("");
 const errorMessage = ref("");
+const phoneNumberInput = ref<any | null>(null);
 
 const handleBack = () => {
   router.back();
+};
+
+const goToRegister = () => {
+  router.push({ name: "Register" });
 };
 
 const handleSubmit = () => {
@@ -20,12 +25,11 @@ const handleSubmit = () => {
   //     // });
   //   }
   if (!phoneInvalid.value) {
-    alert(`شماره موبایل وارد شده: ${phoneNumber.value}`);
+    // alert(`شماره موبایل وارد شده: ${phoneNumber.value}`);
     // router.push({
     // name: "Register",
     // params: { phone: phoneNumber.value },
     // });
-    // alert(`شماره موبایل وارد شده: ${phoneNumber.value}`);
   }
 };
 
@@ -37,19 +41,27 @@ const phoneInvalid = computed(() => {
   const v = phoneNumber.value.trim();
   return v.length > 0 && !v.startsWith("09");
 });
+onMounted(() => {
+  nextTick(() => {
+    // Vuetify v-text-field exposes a focus() method on the component instance
+    // phoneNumberInput.value.focus();
+    phoneNumberInput.value.focus();
+  });
+});
 </script>
 
 <template>
-  <div class="login-container bg-[#333] text-white flex flex-col">
-    <div class="login-card flex flex-col items-start gap-8">
+  <div class="login-container">
+    <div
+      class="login-card flex flex-col items-start gap-8 justify-center min-h-screen"
+    >
       <h1 class="welcome-title text-4xl font-light text-right">خوش آمدید!</h1>
       <p class="subtitle">
-        <!-- لطفاً شماره‌ موبایلتان را وارد کنید تا بتوانیم با شما در ارتباط باشیم. -->
         لطفا برای ورود شماره تلفن خود را وارد کنید.
       </p>
-      <div class="flex-1 w-full text-right">
-        <!-- <label for="phone" class="input-label">شماره موبایل</label> -->
+      <div class="w-full text-right">
         <v-text-field
+          ref="phoneNumberInput"
           dir="rtl"
           id="phone"
           variant="outlined"
@@ -57,40 +69,67 @@ const phoneInvalid = computed(() => {
           type="tel"
           :color="'#4caf50'"
           placeholder="مثال 09123456789"
-          class="phone-input text-right transition-all duration-300 ease-in-out "
+          class="phone-input text-right transition-all duration-300 ease-in-out"
           maxlength="11"
-          @input="() => { phoneNumber = phoneNumber.replace(/[^0-9]/g, ''); errorMessage = '' }"
+          @input="
+            () => {
+              phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+              errorMessage = '';
+            }
+          "
           hide-details
-          :error-messages="errorMessage ? [errorMessage] : (phoneInvalid ? [''] : [])"
+          :error-messages="
+            errorMessage ? [errorMessage] : phoneInvalid ? [''] : []
+          "
           :prepend-inner-icon="phoneNumber ? 'mdi-close' : undefined"
-          @click:prepend-inner="phoneNumber = ''; errorMessage = ''"
+          @click:prepend-inner="
+            phoneNumber = '';
+            errorMessage = '';
+          "
           append-inner-icon="mdi-phone"
-          :class="{ invalid: phoneInvalid,
-            'text-red-800': phoneInvalid
-           }"
-          @keyup.enter.prevent="handleSubmit"
+          :class="{ invalid: phoneInvalid, 'text-red-800': phoneInvalid }"
+          @keyup.enter.prevent="isPhoneValid() ? handleSubmit() : null"
         />
-        <p :class="{ 'text-red-700': phoneInvalid }" class="text-sm mt-2">
-          شماره موبایل باید با 09 شروع شود.
+        <div class="flex justify-between items-center mt-2 px-1">
+          <p
+            :class="{
+              'text-red-700': phoneInvalid,
+              'opacity-60': !phoneInvalid,
+            }"
+            class="text-[.9rem] transition-all duration-300"
+          >
+            شماره موبایل باید با 09 شروع شود.
+          </p>
+        </div>
+      </div>
+      <div class="login flex items-center gap-4 flex-col w-full">
+        <v-btn
+          class="w-[492px] !h-[50px] rounded-full text-white flex items-center active:translate-y-0.5 duration-200 justify-center mx-auto shadow-lg login-button"
+          :disabled="!isPhoneValid()"
+          variant="outlined"
+          :class="isPhoneValid() ? '!bg-[#4caf50]' : '!bg-[#333]'"
+          @click="handleSubmit"
+        >
+          ورود به اپلیکیشن
+        </v-btn>
+        <p
+          dir="ltr"
+          class="!text-sm text-black hover:text-[#388e3c] transition-colors duration-300 flex items-center gap-1"
+        >
+          کنید<span @click="goToRegister" class="cursor-pointer text-[#4caf50]"
+            >ثبت نام
+          </span>
+          <span>حساب کاربری ندارید ؟</span>
         </p>
       </div>
-
-      <p class="text-sm">
+      <!-- <p class="text-sm">
         با ثبت‌نام در اپلیکیشن،
         <span class="text-[#4caf50] cursor-pointer">قوانین و شرایط</span>
         و بیانیه
         <span class="text-[#4caf50] cursor-pointer">حریم خصوصی</span> را قبول
         می‌کنم.
-      </p>
+      </p> -->
     </div>
-    <button
-      class="w-14 h-14 rounded-full bg-gray-400 text-white flex items-center justify-center mt-8 mx-auto shadow-lg login-button"
-      :disabled="isPhoneValid()"
-      :class="{ '!bg-[#4caf50]': isPhoneValid() }"
-      @click="handleSubmit"
-    >
-      <span class="arrow-icon">→</span>
-    </button>
   </div>
 </template>
 <style scoped>
@@ -98,16 +137,15 @@ const phoneInvalid = computed(() => {
   display: flex;
   justify-content: center;
   align-items: start;
-  min-height: 100vh;
-  padding: 20px;
 }
 
 .login-card {
   width: 100%;
   max-width: 520px;
-  padding: 40px 30px;
   text-align: center;
   direction: rtl;
+  padding-top: 80px;
+  padding-bottom: 40px;
 }
 
 .subtitle {
@@ -140,22 +178,6 @@ const phoneInvalid = computed(() => {
   text-decoration: none;
 }
 
-.login-button {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  color: white;
-  background-color: #9e9e9e;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-}
-
 .login-button.disabled {
   background-color: #d0d0d0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -164,6 +186,36 @@ const phoneInvalid = computed(() => {
 .arrow-icon {
   display: block;
   font-weight: 700;
+}
+
+.register-link {
+  position: relative;
+  padding: 4px 0;
+}
+
+/* Ensure placeholder and typed text stay in the same spot even when clear/phone icons appear */
+.phone-input :deep(.v-field__wrap) {
+  display: flex;
+  align-items: center;
+}
+.phone-input :deep(.v-field__prepend-inner),
+.phone-input :deep(.v-field__append-inner) {
+  width: 44px; /* reserve space for icons */
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.phone-input :deep(.v-field__input),
+.phone-input :deep(input) {
+  padding-inline-end: 32px; /* reserve space for the clear/phone icons */
+  padding-inline-start: 12px;
+  transition: padding 0.16s ease;
+  text-align: right;
+}
+.phone-input :deep(.v-field__input)::placeholder {
+  text-align: right;
+  opacity: 0.6;
 }
 
 /* Mobile responsive */
@@ -187,9 +239,15 @@ const phoneInvalid = computed(() => {
     display: flex;
     align-items: center;
   }
-  .phone-input .v-field__prepend-inner { order: 1; }
-  .phone-input .v-field__append-inner { order: 2; }
+  .phone-input .v-field__prepend-inner {
+    order: 1;
+  }
+  .phone-input .v-field__append-inner {
+    order: 2;
+  }
   /* make the prepend-inner (clear icon) look clickable */
-  .phone-input .v-field__prepend-inner .v-icon { cursor: pointer; }
+  .phone-input .v-field__prepend-inner .v-icon {
+    cursor: pointer;
+  }
 }
 </style>

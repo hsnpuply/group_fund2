@@ -4,7 +4,7 @@ import login from '../views/auth/login/container.vue';
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'Home',  
     redirect: '/register'
   },
   {
