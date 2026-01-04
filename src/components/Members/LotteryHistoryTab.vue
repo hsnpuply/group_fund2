@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useMemberFinancial } from '../../views/members/composables/useMemberFinancial'
+import { useLotteries } from '../../views/members/composables/useLotteries'
 
 const props = defineProps<{ memberId: number }>()
 
-const { filteredLotteries, lotteryFilters, loadingLotteries } = useMemberFinancial(props.memberId)
+const { filteredLotteries, lotteryFilters, loadingLotteries } = useLotteries(props.memberId)
 
 const expanded = ref<Record<number, boolean>>({})
 const toggleExpand = (id: number) => expanded.value[id] = !expanded.value[id]

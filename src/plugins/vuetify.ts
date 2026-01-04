@@ -4,6 +4,10 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import '@mdi/font/css/materialdesignicons.css'
 
 export default createVuetify({
+  locale: {
+    locale: 'fa',
+    rtl: false,
+  },
   icons: {
     defaultSet: 'mdi',
     aliases,

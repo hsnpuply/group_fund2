@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useMemberFinancial, type LotteryItem } from '../../views/members/composables/useMemberFinancial'
+import { useLotteries, type LotteryItem } from '../../views/members/composables/useLotteries'
+import { useTransactions } from '../../views/members/composables/useTransactions'
 
 const props = defineProps<{ memberId: number }>()
 
-const { filteredTransactions, transactionFilters, lotteries, loadingTransactions, totals } = useMemberFinancial(props.memberId)
+const { lotteries } = useLotteries(props.memberId)
+const { filteredTransactions, transactionFilters, loadingTransactions, totals } = useTransactions(props.memberId, lotteries.value)
 
 const amountClass = (t: { type: 'installment'|'refund'|'penalty' }) => t.type === 'refund' ? 'amt-income' : 'amt-deduction'
 const typeLabel = (t: 'installment'|'refund'|'penalty') => t === 'installment' ? 'قسط' : t === 'refund' ? 'بازگشت' : 'جریمه'

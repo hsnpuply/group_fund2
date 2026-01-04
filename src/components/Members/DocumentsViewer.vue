@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useMemberFinancial, type DocumentItem, type LotteryItem } from '../../views/members/composables/useMemberFinancial'
+import { useLotteries, type LotteryItem } from '../../views/members/composables/useLotteries'
+import { useDocuments, type DocumentItem } from '../../views/members/composables/useDocuments'
 
 const props = defineProps<{ memberId: number }>()
 
-const { documents, loadingDocuments, lotteries } = useMemberFinancial(props.memberId)
+const { lotteries } = useLotteries(props.memberId)
+const { documents, loadingDocuments } = useDocuments(lotteries.value)
 
 const dialogOpen = ref<boolean>(false)
 const selected = ref<{ id: number; title: string; url: string; status: string; lotteryName?: string } | null>(null)
