@@ -1,18 +1,12 @@
 <script setup lang="ts">
-import { useToast } from 'vue-toastification'
-const toast = useToast()
-
-
-const doToast = () => {
-  toast.error('Hello from Vue Toasted Composable!')
-}
+import AdminLayout from './components/Layout/AdminLayout.vue'
 </script>
 
 <template>
   <v-app>
-    <v-main>
+    <AdminLayout>
       <router-view />
-    </v-main>
+    </AdminLayout>
   </v-app>
 </template>
 

@@ -4,7 +4,10 @@ import login from '../views/auth/login/container.vue';
 import OTP from '../views/auth/login/otp/container.vue';
 import RegisterOTP from '../views/auth/register/otp/container.vue';
 import Dashboard from '../views/dashboard/container.vue';
+import Lotteries from '../views/lotteries/container.vue';
 import Settings from '../views/settings/container.vue';
+import Members from '../views/members/container.vue';
+import MemberDetail from '../views/members/detail.vue';
 
 const routes = [
   {
@@ -39,9 +42,26 @@ const routes = [
     component: Dashboard
   },
   {
+    path: '/lotteries',
+    name: 'Lotteries',
+    component: Lotteries
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: Settings
+  }
+  ,
+  {
+    path: '/members',
+    name: 'Members',
+    component: Members
+  }
+  ,
+  {
+    path: '/members/:id',
+    name: 'MemberDetail',
+    component: MemberDetail
   }
 ]
 
